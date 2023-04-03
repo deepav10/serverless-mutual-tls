@@ -25,6 +25,7 @@ import software.constructs.Construct;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Collections;
 import java.util.Map;
 
 import static java.util.Collections.singletonList;
@@ -39,33 +40,43 @@ public class InfrastructureStack extends Stack {
 
   
   private static final String BACKEND_SERVICE_1_HOST_NAME = "rz59lct053.execute-api.us-east-1.amazonaws.com/Prod/baggage/3.0/claims/ani/5613195444";
+  private static final String BACKEND_SERVICE_2_HOST_NAME = "72.212.141.213/api/2.0/search?airportCode=DFW";
 
   public InfrastructureStack(final Construct scope, final String id, final StackProps props) {
     super(scope, id, props);
 
-    // Vpc vpc = new Vpc(this, "LambdaMutualTLSVpc", VpcProps.builder()
-    //     // Create a new VPC and subnets, spanning 2 availability zones
-    //     .maxAzs(1)
-    //     .build());
-
-        // NetworkLoadBalancer nlb = NetworkLoadBalancer.Builder.create(this, "BackendServiceNLB")
-        // .loadBalancerName("BackendServiceNLB")
-        // .vpc(vpc)
-        // .crossZoneEnabled(true)
-        // .internetFacing(false)
-        // .build();
-
-          // backend service 1 https listener port
-    // NetworkListener httpsListenerPort443 = nlb.addListener("httpsListenerPort443", BaseNetworkListenerProps.builder()
-    // .port(443)
-    // .build());
-
+      Vpc vpc = new Vpc(this, "IIDSLambdaMutualTLSVpc",VpcProps.builder()
+            .cidr("10.0.0.0/24")
+            .natGateways(1)
+            .natGatewayProvider(NatProvider.gateway(NatGatewayProps
+                .builder()
+                .eipAllocationIds(Collections
+                                      .singletonList("eipalloc-0466cea47cb06fc95"))
+                                      .build()))
+            .maxAzs(1)
+            .enableDnsHostnames(true)
+            .enableDnsSupport(true)
+            .subnetConfiguration(  Arrays.asList(SubnetConfiguration.builder()
+                .subnetType(SubnetType.PRIVATE_WITH_NAT)
+                .cidrMask(25)
+                .name("mcprivate")
+                .build(),
+                SubnetConfiguration.builder()
+                .subnetType(SubnetType.PUBLIC)
+                .cidrMask(28)
+                .name("Ingress")
+                .build()))
+            .natGatewaySubnets(SubnetSelection.builder().
+                    subnetType(SubnetType.PUBLIC)
+                    .build())
+            .build());
 
     Function lambdaNoMTLSFunction = new Function(this, "IIDSLambdaNoMTLSFunction", FunctionProps.builder()
       .functionName("lambda-no-mtls")
       .handler("com.amazon.aws.example.AppClient::handleRequest")
       .runtime(Runtime.JAVA_11)
       .architecture(ARM_64)
+      .vpc(vpc)
       .code(Code.fromAsset("../0-lambda-no-mtls/target/lambda-no-mtls.jar"))
       .memorySize(1024)
       .environment(Map.of("BACKEND_SERVICE_1_HOST_NAME", BACKEND_SERVICE_1_HOST_NAME))
@@ -78,11 +89,12 @@ public class InfrastructureStack extends Stack {
       .handler("com.amazon.aws.example.AppClient::handleRequest")
       .runtime(Runtime.JAVA_11)
       .architecture(ARM_64)
+      .vpc(vpc)
       .code(Code.fromAsset("../1-lambda-mtls/target/lambda-mtls.jar"))
       .memorySize(1024)
       .environment(Map.of(
-        "BACKEND_SERVICE_1_HOST_NAME", BACKEND_SERVICE_1_HOST_NAME,
-        "JAVA_TOOL_OPTIONS", "-Djavax.net.ssl.keyStore=./qa-cct-webservice-dev.jks -Djavax.net.ssl.keyStorePassword=ivrqa2020 -Djavax.net.debug=all"
+        "BACKEND_SERVICE_2_HOST_NAME", BACKEND_SERVICE_2_HOST_NAME,
+        "JAVA_TOOL_OPTIONS", "-Djavax.net.ssl.keyStore=./qa-cct-webservice-dev.jks -Djavax.net.ssl.keyStorePassword=ivrqa2020"
       ))
       .timeout(Duration.seconds(10))
       .logRetention(RetentionDays.ONE_WEEK) 

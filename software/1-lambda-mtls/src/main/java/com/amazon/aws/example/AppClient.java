@@ -17,23 +17,33 @@ import java.util.Map;
 
 public class AppClient implements RequestHandler<APIGatewayProxyRequestEvent, APIGatewayProxyResponseEvent> {
 
-  private static final String BACKEND_SERVICE_1_HOST_NAME = System.getenv("https://cslocation.dev.cct.aa.com/api/2.0/search?airportCode=DFW");
+  private static final String BACKEND_SERVICE_2_HOST_NAME = System.getenv("BACKEND_SERVICE_2_HOST_NAME");
   private static final HttpClient client = HttpClient.newBuilder()
     .version(HttpClient.Version.HTTP_2)
-    .connectTimeout(Duration.ofSeconds(5))
+    .connectTimeout(Duration.ofSeconds(10))
     .build();
 
   public APIGatewayProxyResponseEvent handleRequest(final APIGatewayProxyRequestEvent input, final Context context) {
     context.getLogger().log(input.toString());
 
+    System.out.println("BACKEND_SERVICE_2_HOST_NAME: "+BACKEND_SERVICE_2_HOST_NAME);
+
     HttpRequest httpRequest = HttpRequest.newBuilder()
-      .uri(URI.create(String.format("https://%s", BACKEND_SERVICE_1_HOST_NAME)))
+      .header("X-Client-ID", "DeepaTest")
+      .header("X-Transaction-ID", "DeepaTestTrans")
+      .header("callGuid", "DeepaTest123")
+      .header("X-Interaction-ID", "TestInteractionId")
+      .uri(URI.create(String.format("https://%s", BACKEND_SERVICE_2_HOST_NAME)))
       .timeout(Duration.ofSeconds(5))
       .GET()
       .build();
 
+      System.out.println("reached here");
+
     try {
-      HttpResponse<String> httpResponse = client.send(httpRequest, HttpResponse.BodyHandlers.ofString());
+        System.out.println("reached httpResponse::"+httpRequest);
+  
+        HttpResponse<String> httpResponse = client.send(httpRequest, HttpResponse.BodyHandlers.ofString());
 
       return new APIGatewayProxyResponseEvent()
         .withStatusCode(200)
