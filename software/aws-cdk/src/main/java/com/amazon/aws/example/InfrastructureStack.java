@@ -51,8 +51,8 @@ public class InfrastructureStack extends Stack {
             .natGatewayProvider(NatProvider.gateway(NatGatewayProps
                 .builder()
                 .eipAllocationIds(Collections
-                                      .singletonList("eipalloc-0466cea47cb06fc95"))
-                                      .build()))
+                    .singletonList("eipalloc-0466cea47cb06fc95"))
+                    .build()))
             .maxAzs(1)
             .enableDnsHostnames(true)
             .enableDnsSupport(true)
@@ -66,9 +66,10 @@ public class InfrastructureStack extends Stack {
                 .cidrMask(28)
                 .name("Ingress")
                 .build()))
-            .natGatewaySubnets(SubnetSelection.builder().
-                    subnetType(SubnetType.PUBLIC)
-                    .build())
+            .natGatewaySubnets(SubnetSelection
+                .builder()
+                .subnetType(SubnetType.PUBLIC)
+                .build())
             .build());
 
     Function lambdaNoMTLSFunction = new Function(this, "IIDSLambdaNoMTLSFunction", FunctionProps.builder()
