@@ -40,7 +40,7 @@ public class InfrastructureStack extends Stack {
 
   
   private static final String BACKEND_SERVICE_1_HOST_NAME = "rz59lct053.execute-api.us-east-1.amazonaws.com/Prod/baggage/3.0/claims/ani/5613195444";
-  private static final String BACKEND_SERVICE_2_HOST_NAME = "72.212.141.213/api/2.0/search?airportCode=DFW";
+  private static final String BACKEND_SERVICE_2_HOST_NAME = "cslocation.dev.cct.aa.com/api/2.0/search?airportCode=DFW";
 
   public InfrastructureStack(final Construct scope, final String id, final StackProps props) {
     super(scope, id, props);
@@ -95,8 +95,9 @@ public class InfrastructureStack extends Stack {
       .memorySize(1024)
       .environment(Map.of(
         "BACKEND_SERVICE_2_HOST_NAME", BACKEND_SERVICE_2_HOST_NAME,
-        "JAVA_TOOL_OPTIONS", "-Djavax.net.ssl.keyStore=./qa-cct-webservice-dev.jks -Djavax.net.ssl.keyStorePassword=ivrqa2020"
+        "JAVA_TOOL_OPTIONS", "-Djavax.net.ssl.keyStore=qa-cct-webservice-dev.jks -Djavax.net.ssl.keyStorePassword=ivrqa2020 -Djavax.net.ssl.trustStore=nonprod-truststore.jks -Djavax.net.ssl.trustStorePassword=cfcloudnonprod2021 -Djavax.net.debug=ssl" 
       ))
+      // -Dhttps.protocols=TLSv1.2 -Djdk.tls.client.protocols=TLSv1.2 -Djdk.tls.client.cipherSuites=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384,TLS_DHE_RSA_WITH_AES_256_GCM_SHA384,TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384,TLS_ECDH_RSA_WITH_AES_256_GCM_SHA384
       .timeout(Duration.seconds(10))
       .logRetention(RetentionDays.ONE_WEEK) 
       .build());
